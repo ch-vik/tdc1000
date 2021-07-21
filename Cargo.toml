@@ -1,0 +1,16 @@
+[package]
+name = "tdc1000"
+version = "0.1.0"
+authors = ["Robert Hanyecz <rh@wertschuetz.de>"]
+categories = ["embedded", "no-std"]
+description = "no_std driver for the TDC1000 Ultrasonic Sensing Analog Front End"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+documentation = "https://docs.rs/tdc1000"
+edition = "2018"
+repository = "https://github.com/robhany/tdc1000"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+embedded-hal = "0.2.5"

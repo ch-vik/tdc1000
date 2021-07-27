@@ -1,4 +1,7 @@
 ![build_workflow](https://github.com/robhany/lp5018/actions/workflows/rust.yml/badge.svg)
+[![Crates.io Version][crates-io-badge]][crates-io]
+[![Crates.io Downloads][crates-io-download-badge]][crates-io-download]
+![No Std][no-std-badge]
 
 # TDC1000
 
@@ -85,3 +88,10 @@ And this to your main.rs
         delay_ms(5000_u32);
     }
 ```
+
+<!-- Badges -->
+[crates-io]: https://crates.io/crates/tdc1000
+[crates-io-badge]: https://img.shields.io/crates/v/tdc1000.svg?maxAge=3600
+[crates-io-download]: https://crates.io/crates/tdc1000
+[crates-io-download-badge]: https://img.shields.io/crates/d/tdc1000.svg?maxAge=3600
+[no-std-badge]: https://img.shields.io/badge/no__std-yes-blue

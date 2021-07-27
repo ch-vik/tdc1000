@@ -18,7 +18,7 @@ Add this to your Cargo.toml:
 
 ```toml
 [dependencies]
-tdc1000 = "0.1.0"
+tdc1000 = "0.1.1"
 ```
 
 And this to your main.rs

@@ -21,7 +21,7 @@ Add this to your Cargo.toml:
 
 ```toml
 [dependencies]
-tdc1000 = "0.1.1"
+tdc1000 = "0.1.2"
 ```
 
 And this to your main.rs
@@ -88,6 +88,16 @@ And this to your main.rs
         delay_ms(5000_u32);
     }
 ```
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+  http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
 
 <!-- Badges -->
 [crates-io]: https://crates.io/crates/tdc1000

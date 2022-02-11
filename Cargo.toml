@@ -1,6 +1,6 @@
 [package]
 name = "tdc1000"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Robert Hanyecz <rh@wertschuetz.de>"]
 categories = ["embedded", "no-std"]
 description = "no_std driver for the TDC1000 Ultrasonic Sensing Analog Front End"

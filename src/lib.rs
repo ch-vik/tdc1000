@@ -2,13 +2,26 @@
 
 extern crate embedded_hal as hal;
 
-use hal::spi::{Operation, SpiDevice};
+use hal::{
+    digital::{ErrorType, InputPin, OutputPin},
+    spi::{Operation, SpiDevice},
+};
 
 const SPI_WRITE_BIT: u8 = 0x40;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Error<SPI> {
     Spi(SPI),
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum ErrorPin {
+    PinNotAssigned,
+}
+impl hal::digital::Error for ErrorPin {
+    fn kind(&self) -> hal::digital::ErrorKind {
+        hal::digital::ErrorKind::Other
+    }
 }
 
 #[repr(u8)]
@@ -597,9 +610,41 @@ pub struct TimeOut {
     tof_timeout_crl: TofTimeoutControl,
 }
 
-pub struct Tdc1000<SPI>
+pub struct NoPin {}
+
+impl InputPin for NoPin {
+    fn is_low(&mut self) -> Result<bool, Self::Error> {
+        Err(ErrorPin::PinNotAssigned)
+    }
+    fn is_high(&mut self) -> Result<bool, Self::Error> {
+        Err(ErrorPin::PinNotAssigned)
+    }
+}
+impl OutputPin for NoPin {
+    fn set_low(&mut self) -> Result<(), Self::Error> {
+        Err(ErrorPin::PinNotAssigned)
+    }
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        Err(ErrorPin::PinNotAssigned)
+    }
+    fn set_state(
+        &mut self,
+        _state: hal::digital::PinState,
+    ) -> Result<(), Self::Error> {
+        Err(ErrorPin::PinNotAssigned)
+    }
+}
+impl ErrorType for NoPin {
+    type Error = ErrorPin;
+}
+
+pub struct Tdc1000<SPI, CHSEL, TRG, RST, ERR>
 where
     SPI: SpiDevice,
+    CHSEL: OutputPin,
+    TRG: OutputPin,
+    RST: OutputPin,
+    ERR: InputPin,
 {
     config0: Config0,
     config1: Config1,
@@ -610,9 +655,12 @@ where
     timeout: TimeOut,
     clock_rate: ClockRate,
     spi: SPI,
+    channel_sel: CHSEL,
+    trigger: TRG,
+    reset: RST,
+    error: ERR,
 }
-
-impl<SPI> Tdc1000<SPI>
+impl<SPI> Tdc1000<SPI, NoPin, NoPin, NoPin, NoPin>
 where
     SPI: SpiDevice,
 {
@@ -627,8 +675,122 @@ where
             amplifier_and_time_of_flight: Default::default(),
             timeout: Default::default(),
             clock_rate: Default::default(),
+            channel_sel: NoPin {},
+            trigger: NoPin {},
+            reset: NoPin {},
+            error: NoPin {},
         }
     }
+}
+impl<SPI, TRG> Tdc1000<SPI, NoPin, TRG, NoPin, NoPin>
+where
+    SPI: SpiDevice,
+    TRG: OutputPin,
+{
+    pub fn new_with_trigger(spi: SPI, trigger: TRG) -> Self {
+        Self {
+            spi,
+            config0: Default::default(),
+            config1: Default::default(),
+            config2: Default::default(),
+            config3: Default::default(),
+            config4: Default::default(),
+            amplifier_and_time_of_flight: Default::default(),
+            timeout: Default::default(),
+            clock_rate: Default::default(),
+            channel_sel: NoPin {},
+            trigger,
+            reset: NoPin {},
+            error: NoPin {},
+        }
+    }
+}
+impl<SPI, CHSEL, TRG, RST, ERR> Tdc1000<SPI, CHSEL, TRG, RST, ERR>
+where
+    SPI: SpiDevice,
+    CHSEL: OutputPin,
+    TRG: OutputPin,
+    RST: OutputPin,
+    ERR: InputPin,
+{
+    // Consume all optional TDC1000 pins
+    pub fn new_with_pads(
+        spi: SPI,
+        chsel: CHSEL,
+        trigger: TRG,
+        reset: RST,
+        error: ERR,
+    ) -> Self {
+        Self {
+            spi,
+            config0: Default::default(),
+            config1: Default::default(),
+            config2: Default::default(),
+            config3: Default::default(),
+            config4: Default::default(),
+            amplifier_and_time_of_flight: Default::default(),
+            timeout: Default::default(),
+            clock_rate: Default::default(),
+            channel_sel: chsel,
+            trigger,
+            reset,
+            error,
+        }
+    }
+}
+
+impl<SPI, TRG, CHSEL> Tdc1000<SPI, CHSEL, TRG, NoPin, NoPin>
+where
+    SPI: SpiDevice,
+    TRG: OutputPin,
+    CHSEL: OutputPin,
+{
+    // Consume a Channel Select pin and Trigger pin
+    pub fn new_with_chsel_and_trigger(
+        spi: SPI,
+        chsel: CHSEL,
+        trigger: TRG,
+    ) -> Self {
+        Self {
+            spi,
+            config0: Default::default(),
+            config1: Default::default(),
+            config2: Default::default(),
+            config3: Default::default(),
+            config4: Default::default(),
+            amplifier_and_time_of_flight: Default::default(),
+            timeout: Default::default(),
+            clock_rate: Default::default(),
+            channel_sel: chsel,
+            trigger,
+            reset: NoPin {},
+            error: NoPin {},
+        }
+    }
+}
+
+impl<SPI, CHSEL, TRG, RST, ERR> Tdc1000<SPI, CHSEL, TRG, RST, ERR>
+where
+    SPI: SpiDevice,
+    CHSEL: OutputPin,
+    TRG: OutputPin,
+    RST: OutputPin,
+    ERR: InputPin,
+{
+    // Trigger impulse (blocking 100 cycles)
+    pub fn trigger(&mut self) -> Result<(), ErrorPin> {
+        self.trigger
+            .set_high()
+            .map_err(|_| ErrorPin::PinNotAssigned)?;
+        // Wait a bit to allow the TDC1000 to ack the command
+        for _ in 0..=100 {}
+        self.trigger.set_low().map_err(|_| ErrorPin::PinNotAssigned)
+    }
+
+    pub fn errb_status(&mut self) -> Result<bool, ErrorPin> {
+        self.error.is_low().map_err(|_| ErrorPin::PinNotAssigned)
+    }
+
     pub fn set_tx_frequency_divider(
         mut self,
         divider: TxFrequencyDivider,
@@ -823,20 +985,6 @@ where
         self
     }
 
-    // Final build method to create Tdc1000 instance
-    pub fn build(self) -> Tdc1000<SPI> {
-        Tdc1000 {
-            spi: self.spi,
-            config0: self.config0,
-            config1: self.config1,
-            config2: self.config2,
-            config3: self.config3,
-            config4: self.config4,
-            amplifier_and_time_of_flight: self.amplifier_and_time_of_flight,
-            timeout: self.timeout,
-            clock_rate: self.clock_rate,
-        }
-    }
     pub fn get_config_0_value(&self) -> u8 {
         let tx_frequency_divider = self.config0.tx_frequency_divider as u8;
         let tx_pulses = self.config0.tx_pulses.get_value();

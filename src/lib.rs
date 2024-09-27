@@ -2,17 +2,13 @@
 
 extern crate embedded_hal as hal;
 
-use hal::{
-    blocking::spi::{Transfer, Write},
-    digital::v2::OutputPin,
-};
+use hal::spi::{Operation, SpiDevice};
 
 const SPI_WRITE_BIT: u8 = 0x40;
 
-#[derive(Debug)]
-pub enum Error<CsE, SpiE> {
-    ChipSelectError(CsE),
-    SpiError(SpiE),
+#[derive(Copy, Clone, Debug)]
+pub enum Error<SPI> {
+    Spi(SPI),
 }
 
 #[repr(u8)]
@@ -601,8 +597,10 @@ pub struct TimeOut {
     tof_timeout_crl: TofTimeoutControl,
 }
 
-#[derive(Default)]
-pub struct Tdc1000 {
+pub struct Tdc1000<SPI>
+where
+    SPI: SpiDevice,
+{
     config0: Config0,
     config1: Config1,
     config2: Config2,
@@ -611,9 +609,26 @@ pub struct Tdc1000 {
     amplifier_and_time_of_flight: AmplifierAndTimeOfFlight,
     timeout: TimeOut,
     clock_rate: ClockRate,
+    spi: SPI,
 }
 
-impl Tdc1000 {
+impl<SPI> Tdc1000<SPI>
+where
+    SPI: SpiDevice,
+{
+    pub fn new(spi: SPI) -> Self {
+        Self {
+            spi,
+            config0: Default::default(),
+            config1: Default::default(),
+            config2: Default::default(),
+            config3: Default::default(),
+            config4: Default::default(),
+            amplifier_and_time_of_flight: Default::default(),
+            timeout: Default::default(),
+            clock_rate: Default::default(),
+        }
+    }
     pub fn set_tx_frequency_divider(&mut self, divider: TxFrequencyDivider) {
         self.config0.tx_frequency_divider = divider;
     }
@@ -853,102 +868,64 @@ impl Tdc1000 {
         clock_in_div << CLOCK_IN_DIV_BIT_OFFSET | auto_zero_period
     }
 
-    pub fn write_settings<CS, SPI, CsE, SpiE>(
-        &mut self,
-        cs: &mut CS,
-        spi: &mut SPI,
-    ) -> Result<(), Error<CsE, SpiE>>
-    where
-        CS: OutputPin<Error = CsE>,
-        SPI: Transfer<u8, Error = SpiE> + Write<u8, Error = SpiE>,
-    {
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Config0 as u8 | SPI_WRITE_BIT,
-                self.get_config_0_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Config1 as u8 | SPI_WRITE_BIT,
-                self.get_config_1_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Config2 as u8 | SPI_WRITE_BIT,
-                self.get_config_2_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Config3 as u8 | SPI_WRITE_BIT,
-                self.get_config_3_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Config4 as u8 | SPI_WRITE_BIT,
-                self.get_config_4_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Tof1 as u8 | SPI_WRITE_BIT,
-                self.get_tof_1_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::Tof0 as u8 | SPI_WRITE_BIT,
-                self.get_tof_0_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::TimeOut as u8 | SPI_WRITE_BIT,
-                self.get_timeout_value(),
-            ],
-        )?;
-        self.write_to_spi(
-            cs,
-            spi,
-            [
-                ConfigAddresses::ClockRate as u8 | SPI_WRITE_BIT,
-                self.get_clock_rate_value(),
-            ],
-        )?;
+    pub fn write_settings(&mut self) -> Result<(), Error<SPI::Error>> {
+        // Buffers for each address-value pair
+        let config0_buf = [
+            ConfigAddresses::Config0 as u8 | SPI_WRITE_BIT,
+            self.get_config_0_value(),
+        ];
+        let config1_buf = [
+            ConfigAddresses::Config1 as u8 | SPI_WRITE_BIT,
+            self.get_config_1_value(),
+        ];
+        let config2_buf = [
+            ConfigAddresses::Config2 as u8 | SPI_WRITE_BIT,
+            self.get_config_2_value(),
+        ];
+        let config3_buf = [
+            ConfigAddresses::Config3 as u8 | SPI_WRITE_BIT,
+            self.get_config_3_value(),
+        ];
+        let config4_buf = [
+            ConfigAddresses::Config4 as u8 | SPI_WRITE_BIT,
+            self.get_config_4_value(),
+        ];
+        let tof1_buf = [
+            ConfigAddresses::Tof1 as u8 | SPI_WRITE_BIT,
+            self.get_tof_1_value(),
+        ];
+        let tof0_buf = [
+            ConfigAddresses::Tof0 as u8 | SPI_WRITE_BIT,
+            self.get_tof_0_value(),
+        ];
+        let timeout_buf = [
+            ConfigAddresses::TimeOut as u8 | SPI_WRITE_BIT,
+            self.get_timeout_value(),
+        ];
+        let clockrate_buf = [
+            ConfigAddresses::ClockRate as u8 | SPI_WRITE_BIT,
+            self.get_clock_rate_value(),
+        ];
 
-        Ok(())
+        // Create the operations array
+        let mut operations = [
+            Operation::Write(&config0_buf),
+            Operation::Write(&config1_buf),
+            Operation::Write(&config2_buf),
+            Operation::Write(&config3_buf),
+            Operation::Write(&config4_buf),
+            Operation::Write(&tof1_buf),
+            Operation::Write(&tof0_buf),
+            Operation::Write(&timeout_buf),
+            Operation::Write(&clockrate_buf),
+        ];
+
+        // Perform the SPI transaction
+        self.spi.transaction(&mut operations).map_err(Error::Spi)
     }
 
-    pub fn read_error<CS, SPI, CsE, SpiE>(
-        &mut self,
-        cs: &mut CS,
-        spi: &mut SPI,
-    ) -> Result<ErrorFlagsRead, Error<CsE, SpiE>>
-    where
-        CS: OutputPin<Error = CsE>,
-        SPI: Transfer<u8, Error = SpiE> + Write<u8, Error = SpiE>,
-    {
-        let result =
-            self.read_from_spi(cs, spi, ConfigAddresses::ErrFlag as u8)?;
+    pub fn read_error(&mut self) -> Result<ErrorFlagsRead, Error<SPI::Error>> {
+        let result = self.read_from_spi(ConfigAddresses::ErrFlag as u8)?;
         let mut error_flags = ErrorFlagsRead::default();
         if result & 0b1 == 0b1 {
             error_flags.signal_high = ErrSignalHighRead::SignalHigh;
@@ -966,91 +943,59 @@ impl Tdc1000 {
         Ok(error_flags)
     }
 
-    pub fn reset_error<CS, SPI, CsE, SpiE>(
+    pub fn reset_error(
         &mut self,
-        cs: &mut CS,
-        spi: &mut SPI,
         reset_type: ErrorFlagsWrite,
-    ) -> Result<(), Error<CsE, SpiE>>
-    where
-        CS: OutputPin<Error = CsE>,
-        SPI: Transfer<u8, Error = SpiE> + Write<u8, Error = SpiE>,
-    {
-        self.write_to_spi(
-            cs,
-            spi,
-            [
+    ) -> Result<(), Error<SPI::Error>> {
+        self.spi
+            .write(&[
                 ConfigAddresses::ErrFlag as u8 | SPI_WRITE_BIT,
                 reset_type as u8,
-            ],
-        )?;
-        Ok(())
+            ])
+            .map_err(Error::Spi)
     }
 
-    pub fn read_raw_config_values<CS, SPI, CsE, SpiE>(
+    pub fn read_raw_config_values(
         &mut self,
-        cs: &mut CS,
-        spi: &mut SPI,
         raw_value_buffer: &mut [u8; 10],
-    ) -> Result<(), Error<CsE, SpiE>>
-    where
-        CS: OutputPin<Error = CsE>,
-        SPI: Transfer<u8, Error = SpiE> + Write<u8, Error = SpiE>,
-    {
+    ) -> Result<(), Error<SPI::Error>> {
         raw_value_buffer[0] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Config0 as u8)?;
+            self.read_from_spi(ConfigAddresses::Config0 as u8)?;
         raw_value_buffer[1] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Config1 as u8)?;
+            self.read_from_spi(ConfigAddresses::Config1 as u8)?;
         raw_value_buffer[2] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Config2 as u8)?;
+            self.read_from_spi(ConfigAddresses::Config2 as u8)?;
         raw_value_buffer[3] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Config3 as u8)?;
+            self.read_from_spi(ConfigAddresses::Config3 as u8)?;
         raw_value_buffer[4] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Config4 as u8)?;
+            self.read_from_spi(ConfigAddresses::Config4 as u8)?;
         raw_value_buffer[5] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Tof1 as u8)?;
+            self.read_from_spi(ConfigAddresses::Tof1 as u8)?;
         raw_value_buffer[6] =
-            self.read_from_spi(cs, spi, ConfigAddresses::Tof0 as u8)?;
+            self.read_from_spi(ConfigAddresses::Tof0 as u8)?;
         raw_value_buffer[7] =
-            self.read_from_spi(cs, spi, ConfigAddresses::ErrFlag as u8)?;
+            self.read_from_spi(ConfigAddresses::ErrFlag as u8)?;
         raw_value_buffer[8] =
-            self.read_from_spi(cs, spi, ConfigAddresses::TimeOut as u8)?;
+            self.read_from_spi(ConfigAddresses::TimeOut as u8)?;
         raw_value_buffer[9] =
-            self.read_from_spi(cs, spi, ConfigAddresses::ClockRate as u8)?;
+            self.read_from_spi(ConfigAddresses::ClockRate as u8)?;
         Ok(())
     }
 
-    fn read_from_spi<CS, SPI, CsE, SpiE>(
+    pub fn read_from_spi(
         &mut self,
-        cs: &mut CS,
-        spi: &mut SPI,
-        address_to_read: u8,
-    ) -> Result<u8, Error<CsE, SpiE>>
-    where
-        CS: OutputPin<Error = CsE>,
-        SPI: Transfer<u8, Error = SpiE> + Write<u8, Error = SpiE>,
-    {
-        let mut read_buffer = [address_to_read, 0xff];
-        cs.set_low().map_err(Error::ChipSelectError)?;
-        spi.transfer(&mut read_buffer).map_err(Error::SpiError)?;
-        cs.set_high().map_err(Error::ChipSelectError)?;
-        Ok(read_buffer[1])
-    }
+        address: u8,
+    ) -> Result<u8, Error<SPI::Error>> {
+        let mut buf = [0; 1];
 
-    fn write_to_spi<CS, SPI, CsE, SpiE>(
-        &mut self,
-        cs: &mut CS,
-        spi: &mut SPI,
-        data: [u8; 2],
-    ) -> Result<(), Error<CsE, SpiE>>
-    where
-        CS: OutputPin<Error = CsE>,
-        SPI: Transfer<u8, Error = SpiE> + Write<u8, Error = SpiE>,
-    {
-        cs.set_low().map_err(Error::ChipSelectError)?;
-        spi.write(&data).map_err(Error::SpiError)?;
-        cs.set_high().map_err(Error::ChipSelectError)?;
-        Ok(())
+        self.spi
+            .transaction(&mut [
+                Operation::Write(&[address]),
+                Operation::Read(&mut buf),
+            ])
+            .map_err(Error::Spi)?;
+
+        Ok(buf[0])
     }
 }
 
@@ -1064,7 +1009,13 @@ fn trim_value_u8(value: u8, max: u8, min: u8) -> u8 {
 
 #[cfg(test)]
 mod tests {
+    #[no_link]
     extern crate std;
+
+    use core::convert::Infallible;
+    use embedded_hal::spi::SpiDevice;
+    use embedded_hal::spi::{ErrorType, Operation};
+
     use crate::{
         ChannelSwap, EchoQualificationThreshold, MeasurementCycles,
         ReceiveEventsCnt, ShortTofBlankPeriod, TOFMeasurementMode, Tdc1000,
@@ -1072,18 +1023,46 @@ mod tests {
         VoltageReference,
     };
 
+    // Define a mock SpiDevice that does nothing
+    struct MockSpiDevice;
+
+    // Implement the required ErrorType trait for MockSpiDevice
+    impl ErrorType for MockSpiDevice {
+        type Error = Infallible; // Use Infallible for mock error type
+    }
+
+    // Implement SpiDevice for MockSpiDevice, assuming u8 as the Word type for simplicity
+    impl SpiDevice<u8> for MockSpiDevice {
+        fn transaction<'a>(
+            &mut self,
+            _operations: &mut [Operation<'a, u8>],
+        ) -> Result<(), Self::Error> {
+            // Mock does nothing
+            Ok(())
+        }
+    }
+
     #[test]
     fn config_0_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        // Create the mock SpiDevice
+        let spi = MockSpiDevice;
+
+        // Create the Tdc1000 object using the mock SpiDevice
+        let mut tdc1000 = Tdc1000::new(spi);
+
+        // Set some configuration values
         tdc1000.set_tx_frequency_divider(TxFrequencyDivider::DivideBy8);
         tdc1000.set_number_of_tx_pulses(TxPulses::new(1));
+
+        // Get the config 0 value and assert correctness
         let config0val = tdc1000.get_config_0_value();
         assert_eq!(config0val, 65);
     }
 
     #[test]
     fn config_1_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         tdc1000.set_measurement_cycles(MeasurementCycles::MeasurementCycles1);
         tdc1000.set_receive_events(ReceiveEventsCnt::StopEvents4);
         let config1val = tdc1000.get_config_1_value();
@@ -1092,7 +1071,8 @@ mod tests {
 
     #[test]
     fn config_2_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         let config2val = tdc1000.get_config_2_value();
         assert_eq!(config2val, 0);
 
@@ -1105,7 +1085,8 @@ mod tests {
 
     #[test]
     fn config_3_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         tdc1000
             .set_echo_qualification_threshold(EchoQualificationThreshold::Mv75);
         let config3val = tdc1000.get_config_3_value();
@@ -1114,7 +1095,8 @@ mod tests {
 
     #[test]
     fn config_4_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         tdc1000.set_tx_pulse_shift_position(TxPulseShiftPosition::new(5));
         let config4val = tdc1000.get_config_4_value();
         assert_eq!(config4val, 5);
@@ -1122,7 +1104,8 @@ mod tests {
 
     #[test]
     fn tof_1_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         tdc1000.set_time_of_flight(TimeOfFlightValue::new(
             TimeOfFlightValue::HIGH,
         ));
@@ -1132,7 +1115,8 @@ mod tests {
 
     #[test]
     fn tof_2_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         tdc1000.set_time_of_flight(TimeOfFlightValue::new(
             TimeOfFlightValue::HIGH,
         ));
@@ -1142,7 +1126,8 @@ mod tests {
 
     #[test]
     fn timeout_value_for_spi_is_calculated_correctly() {
-        let mut tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let mut tdc1000 = Tdc1000::new(spi);
         tdc1000.set_short_tof_blank_period(ShortTofBlankPeriod::T0Times32);
         let timeout_value = tdc1000.get_timeout_value();
         assert_eq!(timeout_value, 17);
@@ -1150,7 +1135,8 @@ mod tests {
 
     #[test]
     fn clock_rate_value_for_spi_is_calculated_correctly() {
-        let tdc1000 = Tdc1000::default();
+        let spi = MockSpiDevice;
+        let tdc1000 = Tdc1000::new(spi);
         let clock_rate_value = tdc1000.get_clock_rate_value();
         assert_eq!(clock_rate_value, 0);
     }

@@ -629,154 +629,214 @@ where
             clock_rate: Default::default(),
         }
     }
-    pub fn set_tx_frequency_divider(&mut self, divider: TxFrequencyDivider) {
+    pub fn set_tx_frequency_divider(
+        mut self,
+        divider: TxFrequencyDivider,
+    ) -> Self {
         self.config0.tx_frequency_divider = divider;
+        self
     }
 
-    pub fn set_number_of_tx_pulses(&mut self, pulses: TxPulses) {
+    pub fn set_number_of_tx_pulses(mut self, pulses: TxPulses) -> Self {
         self.config0.tx_pulses = pulses;
+        self
     }
 
-    pub fn set_measurement_cycles(&mut self, cycles: MeasurementCycles) {
+    pub fn set_measurement_cycles(mut self, cycles: MeasurementCycles) -> Self {
         self.config1.measurement_cycles = cycles;
+        self
     }
 
-    pub fn set_receive_events(&mut self, events_cnt: ReceiveEventsCnt) {
+    pub fn set_receive_events(mut self, events_cnt: ReceiveEventsCnt) -> Self {
         self.config1.receive_events_cnt = events_cnt;
+        self
     }
 
     pub fn set_common_voltage_reference_mode(
-        &mut self,
+        mut self,
         voltage_reference: VoltageReference,
-    ) {
+    ) -> Self {
         self.config2.voltage_reference = voltage_reference;
+        self
     }
 
-    pub fn set_measure_mode(&mut self, measure_mode: MeasurementMode) {
+    pub fn set_measure_mode(mut self, measure_mode: MeasurementMode) -> Self {
         self.config2.measurement_mode = measure_mode;
+        self
     }
 
-    pub fn set_damping(&mut self, damping_mode: DampingMode) {
+    pub fn set_damping(mut self, damping_mode: DampingMode) -> Self {
         self.config2.damping_mode = damping_mode;
+        self
     }
 
-    pub fn set_channel_swap(&mut self, channel_swap: ChannelSwap) {
+    pub fn set_channel_swap(mut self, channel_swap: ChannelSwap) -> Self {
         self.config2.channel_swap = channel_swap;
+        self
     }
 
     pub fn set_external_channel_select(
-        &mut self,
+        mut self,
         external_channel_select: ExternalChannelSelect,
-    ) {
+    ) -> Self {
         self.config2.ext_channel_select = external_channel_select;
+        self
     }
 
-    pub fn set_active_channel(&mut self, channel: ChannelSelect) {
+    pub fn set_active_channel(mut self, channel: ChannelSelect) -> Self {
         self.config2.channel_select = channel;
+        self
     }
 
     pub fn set_tof_meas_mode(
-        &mut self,
+        mut self,
         tof_measurement_mode: TOFMeasurementMode,
-    ) {
+    ) -> Self {
         self.config2.tof_meas_mode = tof_measurement_mode;
+        self
     }
 
     pub fn set_temp_measurement_mode(
-        &mut self,
+        mut self,
         temp_measurement_mode: TempMode,
-    ) {
+    ) -> Self {
         self.config3.temp_mode = temp_measurement_mode;
+        self
     }
 
-    pub fn set_temp_rtd_type(&mut self, temp_rtd: TempRtdSelect) {
+    pub fn set_temp_rtd_type(mut self, temp_rtd: TempRtdSelect) -> Self {
         self.config3.temp_rtd = temp_rtd;
+        self
     }
 
-    pub fn set_temp_clock_divider(&mut self, temp_clock_div: TempClockDivider) {
+    pub fn set_temp_clock_divider(
+        mut self,
+        temp_clock_div: TempClockDivider,
+    ) -> Self {
         self.config3.temp_clk_div = temp_clock_div;
+        self
     }
 
-    pub fn set_blanking(&mut self, blanking: PowerBlanking) {
+    pub fn set_blanking(mut self, blanking: PowerBlanking) -> Self {
         self.config3.blanking = blanking;
+        self
     }
 
     pub fn set_echo_qualification_threshold(
-        &mut self,
+        mut self,
         threshold: EchoQualificationThreshold,
-    ) {
+    ) -> Self {
         self.config3.echo_qualification_threshold = threshold;
+        self
     }
 
-    pub fn set_receive_mode(&mut self, receive_mode: ReceiveMode) {
+    pub fn set_receive_mode(mut self, receive_mode: ReceiveMode) -> Self {
         self.config4.receive_mode = receive_mode;
+        self
     }
 
-    pub fn set_trigger(&mut self, trigger: TriggerEdgePolarity) {
+    pub fn set_trigger(mut self, trigger: TriggerEdgePolarity) -> Self {
         self.config4.trigger_edge_polarity = trigger;
+        self
     }
 
     pub fn set_tx_pulse_shift_position(
-        &mut self,
+        mut self,
         position: TxPulseShiftPosition,
-    ) {
+    ) -> Self {
         self.config4.tx_pulse_shift_position = position;
+        self
     }
 
-    pub fn set_time_of_flight(&mut self, tof: TimeOfFlightValue) {
+    pub fn set_time_of_flight(mut self, tof: TimeOfFlightValue) -> Self {
         self.amplifier_and_time_of_flight.time_of_flight = tof;
+        self
     }
 
-    pub fn set_pga_gain(&mut self, gain: PgaGain) {
+    pub fn set_pga_gain(mut self, gain: PgaGain) -> Self {
         self.amplifier_and_time_of_flight.pga_gain = gain;
+        self
     }
 
-    pub fn set_pga_control(&mut self, control: AmplifierControl) {
+    pub fn set_pga_control(mut self, control: AmplifierControl) -> Self {
         self.amplifier_and_time_of_flight.pga_ctrl = control;
+        self
     }
 
-    pub fn set_lna_control(&mut self, control: AmplifierControl) {
+    pub fn set_lna_control(mut self, control: AmplifierControl) -> Self {
         self.amplifier_and_time_of_flight.lna_ctrl = control;
+        self
     }
 
-    pub fn set_lna_feedback_mode(&mut self, feedback_mode: LnaFeedbackMode) {
+    pub fn set_lna_feedback_mode(
+        mut self,
+        feedback_mode: LnaFeedbackMode,
+    ) -> Self {
         self.amplifier_and_time_of_flight.lna_fb = feedback_mode;
+        self
     }
 
-    pub fn set_tof_value(&mut self, tof_value: TimeOfFlightValue) {
+    pub fn set_tof_value(mut self, tof_value: TimeOfFlightValue) -> Self {
         self.amplifier_and_time_of_flight.time_of_flight = tof_value;
+        self
     }
 
     pub fn set_force_short_tof(
-        &mut self,
+        mut self,
         force_short_tof: ForceShortTimeOfFlight,
-    ) {
+    ) -> Self {
         self.timeout.force_short_tof = force_short_tof;
+        self
     }
 
     pub fn set_short_tof_blank_period(
-        &mut self,
+        mut self,
         blank_period: ShortTofBlankPeriod,
-    ) {
+    ) -> Self {
         self.timeout.short_tof_blank_period = blank_period;
+        self
     }
 
-    pub fn set_echo_timeout(&mut self, timeout: EchoTimeout) {
+    pub fn set_echo_timeout(mut self, timeout: EchoTimeout) -> Self {
         self.timeout.echo_timeout = timeout;
+        self
     }
 
-    pub fn set_tof_timeout_ctrl(&mut self, timeout_ctrl: TofTimeoutControl) {
+    pub fn set_tof_timeout_ctrl(
+        mut self,
+        timeout_ctrl: TofTimeoutControl,
+    ) -> Self {
         self.timeout.tof_timeout_crl = timeout_ctrl;
+        self
     }
 
-    pub fn set_clock_in_div(&mut self, clock_in_div: ClockInDiv) {
+    pub fn set_clock_in_div(mut self, clock_in_div: ClockInDiv) -> Self {
         self.clock_rate.clock_in_div = clock_in_div;
+        self
     }
 
-    pub fn set_auto_zero_period(&mut self, auto_zero_period: AutoZeroPeriod) {
+    pub fn set_auto_zero_period(
+        mut self,
+        auto_zero_period: AutoZeroPeriod,
+    ) -> Self {
         self.clock_rate.auto_zero_period = auto_zero_period;
+        self
     }
 
+    // Final build method to create Tdc1000 instance
+    pub fn build(self) -> Tdc1000<SPI> {
+        Tdc1000 {
+            spi: self.spi,
+            config0: self.config0,
+            config1: self.config1,
+            config2: self.config2,
+            config3: self.config3,
+            config4: self.config4,
+            amplifier_and_time_of_flight: self.amplifier_and_time_of_flight,
+            timeout: self.timeout,
+            clock_rate: self.clock_rate,
+        }
+    }
     pub fn get_config_0_value(&self) -> u8 {
         let tx_frequency_divider = self.config0.tx_frequency_divider as u8;
         let tx_pulses = self.config0.tx_pulses.get_value();

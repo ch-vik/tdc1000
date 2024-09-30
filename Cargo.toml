@@ -14,11 +14,3 @@ repository = "https://github.com/robhany/tdc1000"
 
 [dependencies]
 embedded-hal = "1.0.0"
-embedded-hal-bus = { version = "0.2", default-features = false }
-portable-atomic = { version = "1.8", default-features = false, optional = true, features = [
-  "require-cas",
-] }
-
-[features]
-defaults = []
-portable-atomic = ["dep:portable-atomic"]

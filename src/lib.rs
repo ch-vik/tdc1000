@@ -638,9 +638,8 @@ impl ErrorType for NoPin {
     type Error = ErrorPin;
 }
 
-pub struct Tdc1000<SPI, CHSEL, TRG, RST, ERR>
+pub struct Tdc1000Builder<CHSEL, TRG, RST, ERR>
 where
-    SPI: SpiDevice,
     CHSEL: OutputPin,
     TRG: OutputPin,
     RST: OutputPin,
@@ -654,19 +653,14 @@ where
     amplifier_and_time_of_flight: AmplifierAndTimeOfFlight,
     timeout: TimeOut,
     clock_rate: ClockRate,
-    spi: SPI,
     channel_sel: CHSEL,
     trigger: TRG,
     reset: RST,
     error: ERR,
 }
-impl<SPI> Tdc1000<SPI, NoPin, NoPin, NoPin, NoPin>
-where
-    SPI: SpiDevice,
-{
-    pub fn new(spi: SPI) -> Self {
+impl Tdc1000Builder<NoPin, NoPin, NoPin, NoPin> {
+    pub fn new() -> Self {
         Self {
-            spi,
             config0: Default::default(),
             config1: Default::default(),
             config2: Default::default(),
@@ -682,14 +676,12 @@ where
         }
     }
 }
-impl<SPI, TRG> Tdc1000<SPI, NoPin, TRG, NoPin, NoPin>
+impl<TRG> Tdc1000Builder<NoPin, TRG, NoPin, NoPin>
 where
-    SPI: SpiDevice,
     TRG: OutputPin,
 {
-    pub fn new_with_trigger(spi: SPI, trigger: TRG) -> Self {
+    pub fn new_with_trigger(trigger: TRG) -> Self {
         Self {
-            spi,
             config0: Default::default(),
             config1: Default::default(),
             config2: Default::default(),
@@ -705,92 +697,34 @@ where
         }
     }
 }
-impl<SPI, CHSEL, TRG, RST, ERR> Tdc1000<SPI, CHSEL, TRG, RST, ERR>
+
+impl<CHSEL, TRG, RST, ERR> Tdc1000Builder<CHSEL, TRG, RST, ERR>
 where
-    SPI: SpiDevice,
     CHSEL: OutputPin,
     TRG: OutputPin,
     RST: OutputPin,
     ERR: InputPin,
 {
-    // Consume all optional TDC1000 pins
-    pub fn new_with_pads(
+    pub fn build<SPI: SpiDevice>(
+        self,
         spi: SPI,
-        chsel: CHSEL,
-        trigger: TRG,
-        reset: RST,
-        error: ERR,
-    ) -> Self {
-        Self {
+    ) -> Tdc1000<SPI, CHSEL, TRG, RST, ERR> {
+        Tdc1000 {
             spi,
-            config0: Default::default(),
-            config1: Default::default(),
-            config2: Default::default(),
-            config3: Default::default(),
-            config4: Default::default(),
-            amplifier_and_time_of_flight: Default::default(),
-            timeout: Default::default(),
-            clock_rate: Default::default(),
-            channel_sel: chsel,
-            trigger,
-            reset,
-            error,
+            config0: self.config0,
+            config1: self.config1,
+            config2: self.config2,
+            config3: self.config3,
+            config4: self.config4,
+            amplifier_and_time_of_flight: self.amplifier_and_time_of_flight,
+            timeout: self.timeout,
+            clock_rate: self.clock_rate,
+            channel_sel: self.channel_sel,
+            trigger: self.trigger,
+            reset: self.reset,
+            error: self.error,
         }
     }
-}
-
-impl<SPI, TRG, CHSEL> Tdc1000<SPI, CHSEL, TRG, NoPin, NoPin>
-where
-    SPI: SpiDevice,
-    TRG: OutputPin,
-    CHSEL: OutputPin,
-{
-    // Consume a Channel Select pin and Trigger pin
-    pub fn new_with_chsel_and_trigger(
-        spi: SPI,
-        chsel: CHSEL,
-        trigger: TRG,
-    ) -> Self {
-        Self {
-            spi,
-            config0: Default::default(),
-            config1: Default::default(),
-            config2: Default::default(),
-            config3: Default::default(),
-            config4: Default::default(),
-            amplifier_and_time_of_flight: Default::default(),
-            timeout: Default::default(),
-            clock_rate: Default::default(),
-            channel_sel: chsel,
-            trigger,
-            reset: NoPin {},
-            error: NoPin {},
-        }
-    }
-}
-
-impl<SPI, CHSEL, TRG, RST, ERR> Tdc1000<SPI, CHSEL, TRG, RST, ERR>
-where
-    SPI: SpiDevice,
-    CHSEL: OutputPin,
-    TRG: OutputPin,
-    RST: OutputPin,
-    ERR: InputPin,
-{
-    // Trigger impulse (blocking 100 cycles)
-    pub fn trigger(&mut self) -> Result<(), ErrorPin> {
-        self.trigger
-            .set_high()
-            .map_err(|_| ErrorPin::PinNotAssigned)?;
-        // Wait a bit to allow the TDC1000 to ack the command
-        for _ in 0..=100 {}
-        self.trigger.set_low().map_err(|_| ErrorPin::PinNotAssigned)
-    }
-
-    pub fn errb_status(&mut self) -> Result<bool, ErrorPin> {
-        self.error.is_low().map_err(|_| ErrorPin::PinNotAssigned)
-    }
-
     pub fn set_tx_frequency_divider(
         mut self,
         divider: TxFrequencyDivider,
@@ -983,6 +917,109 @@ where
     ) -> Self {
         self.clock_rate.auto_zero_period = auto_zero_period;
         self
+    }
+}
+
+impl<CHSEL, TRG, RST, ERR> Tdc1000Builder<CHSEL, TRG, RST, ERR>
+where
+    CHSEL: OutputPin,
+    TRG: OutputPin,
+    RST: OutputPin,
+    ERR: InputPin,
+{
+    // Consume all optional TDC1000 pins
+    pub fn new_with_pads(
+        chsel: CHSEL,
+        trigger: TRG,
+        reset: RST,
+        error: ERR,
+    ) -> Self {
+        Self {
+            config0: Default::default(),
+            config1: Default::default(),
+            config2: Default::default(),
+            config3: Default::default(),
+            config4: Default::default(),
+            amplifier_and_time_of_flight: Default::default(),
+            timeout: Default::default(),
+            clock_rate: Default::default(),
+            channel_sel: chsel,
+            trigger,
+            reset,
+            error,
+        }
+    }
+}
+
+pub struct Tdc1000<SPI, CHSEL, TRG, RST, ERR>
+where
+    SPI: SpiDevice,
+    CHSEL: OutputPin,
+    TRG: OutputPin,
+    RST: OutputPin,
+    ERR: InputPin,
+{
+    config0: Config0,
+    config1: Config1,
+    config2: Config2,
+    config3: Config3,
+    config4: Config4,
+    amplifier_and_time_of_flight: AmplifierAndTimeOfFlight,
+    timeout: TimeOut,
+    clock_rate: ClockRate,
+    spi: SPI,
+    channel_sel: CHSEL,
+    trigger: TRG,
+    reset: RST,
+    error: ERR,
+}
+
+impl<SPI, CHSEL, TRG, RST, ERR> Tdc1000<SPI, CHSEL, TRG, RST, ERR>
+where
+    SPI: SpiDevice,
+    CHSEL: OutputPin,
+    TRG: OutputPin,
+    RST: OutputPin,
+    ERR: InputPin,
+{
+    // Trigger impulse (blocking 100 cycles)
+    pub fn trigger(&mut self) -> Result<(), ErrorPin> {
+        self.trigger
+            .set_high()
+            .map_err(|_| ErrorPin::PinNotAssigned)?;
+        // Wait a bit to allow the TDC1000 to ack the command
+        for _ in 0..=100 {}
+        self.trigger.set_low().map_err(|_| ErrorPin::PinNotAssigned)
+    }
+
+    pub fn errb_status(&mut self) -> Result<bool, ErrorPin> {
+        self.error.is_low().map_err(|_| ErrorPin::PinNotAssigned)
+    }
+
+    pub fn set_active_channel(
+        &mut self,
+        channel: ChannelSelect,
+    ) -> Result<(), Error<SPI::Error>> {
+        self.config2.channel_select = channel;
+        self.spi
+            .write(&[
+                ConfigAddresses::Config2 as u8 | SPI_WRITE_BIT,
+                self.get_config_2_value(),
+            ])
+            .map_err(Error::Spi)
+    }
+
+    pub fn set_pga_gain(
+        &mut self,
+        gain: PgaGain,
+    ) -> Result<(), Error<SPI::Error>> {
+        self.amplifier_and_time_of_flight.pga_gain = gain;
+        self.spi
+            .write(&[
+                ConfigAddresses::Tof1 as u8 | SPI_WRITE_BIT,
+                self.get_tof_1_value(),
+            ])
+            .map_err(Error::Spi)
     }
 
     pub fn get_config_0_value(&self) -> u8 {

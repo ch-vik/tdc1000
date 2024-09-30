@@ -1257,15 +1257,15 @@ mod tests {
     #[no_link]
     extern crate std;
 
-    use core::convert::Infallible;
     use embedded_hal::spi::SpiDevice;
     use embedded_hal::spi::{ErrorType, Operation};
+    use std::convert::Infallible;
 
     use crate::{
         ChannelSwap, EchoQualificationThreshold, MeasurementCycles,
-        ReceiveEventsCnt, ShortTofBlankPeriod, TOFMeasurementMode, Tdc1000,
-        TimeOfFlightValue, TxFrequencyDivider, TxPulseShiftPosition, TxPulses,
-        VoltageReference,
+        ReceiveEventsCnt, ShortTofBlankPeriod, TOFMeasurementMode,
+        Tdc1000Builder, TimeOfFlightValue, TxFrequencyDivider,
+        TxPulseShiftPosition, TxPulses, VoltageReference,
     };
 
     // Define a mock SpiDevice that does nothing
@@ -1278,9 +1278,9 @@ mod tests {
 
     // Implement SpiDevice for MockSpiDevice, assuming u8 as the Word type for simplicity
     impl SpiDevice<u8> for MockSpiDevice {
-        fn transaction<'a>(
+        fn transaction(
             &mut self,
-            _operations: &mut [Operation<'a, u8>],
+            _operations: &mut [Operation<'_, u8>],
         ) -> Result<(), Self::Error> {
             // Mock does nothing
             Ok(())
@@ -1292,12 +1292,10 @@ mod tests {
         // Create the mock SpiDevice
         let spi = MockSpiDevice;
 
-        // Create the Tdc1000 object using the mock SpiDevice
-        let mut tdc1000 = Tdc1000::new(spi);
-
-        // Set some configuration values
-        tdc1000.set_tx_frequency_divider(TxFrequencyDivider::DivideBy8);
-        tdc1000.set_number_of_tx_pulses(TxPulses::new(1));
+        let tdc1000 = Tdc1000Builder::new()
+            .set_tx_frequency_divider(TxFrequencyDivider::DivideBy8)
+            .set_number_of_tx_pulses(TxPulses::new(1))
+            .build(spi);
 
         // Get the config 0 value and assert correctness
         let config0val = tdc1000.get_config_0_value();
@@ -1307,9 +1305,11 @@ mod tests {
     #[test]
     fn config_1_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
-        tdc1000.set_measurement_cycles(MeasurementCycles::MeasurementCycles1);
-        tdc1000.set_receive_events(ReceiveEventsCnt::StopEvents4);
+        let tdc1000 = Tdc1000Builder::new()
+            .set_measurement_cycles(MeasurementCycles::MeasurementCycles1)
+            .set_receive_events(ReceiveEventsCnt::StopEvents4)
+            .build(spi);
+
         let config1val = tdc1000.get_config_1_value();
         assert_eq!(config1val, 4);
     }
@@ -1317,13 +1317,17 @@ mod tests {
     #[test]
     fn config_2_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
+        let tdc1000 = Tdc1000Builder::new().build(spi);
         let config2val = tdc1000.get_config_2_value();
         assert_eq!(config2val, 0);
 
-        tdc1000.set_common_voltage_reference_mode(VoltageReference::External);
-        tdc1000.set_channel_swap(ChannelSwap::EnableSwap);
-        tdc1000.set_tof_meas_mode(TOFMeasurementMode::Mode2);
+        let spi = MockSpiDevice;
+        let tdc1000 = Tdc1000Builder::new()
+            .set_common_voltage_reference_mode(VoltageReference::External)
+            .set_channel_swap(ChannelSwap::EnableSwap)
+            .set_tof_meas_mode(TOFMeasurementMode::Mode2)
+            .build(spi);
+
         let config2val = tdc1000.get_config_2_value();
         assert_eq!(config2val, 146);
     }
@@ -1331,9 +1335,9 @@ mod tests {
     #[test]
     fn config_3_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
-        tdc1000
-            .set_echo_qualification_threshold(EchoQualificationThreshold::Mv75);
+        let tdc1000 = Tdc1000Builder::new()
+            .set_echo_qualification_threshold(EchoQualificationThreshold::Mv75)
+            .build(spi);
         let config3val = tdc1000.get_config_3_value();
         assert_eq!(config3val, 2);
     }
@@ -1341,8 +1345,9 @@ mod tests {
     #[test]
     fn config_4_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
-        tdc1000.set_tx_pulse_shift_position(TxPulseShiftPosition::new(5));
+        let tdc1000 = Tdc1000Builder::new()
+            .set_tx_pulse_shift_position(TxPulseShiftPosition::new(5))
+            .build(spi);
         let config4val = tdc1000.get_config_4_value();
         assert_eq!(config4val, 5);
     }
@@ -1350,10 +1355,9 @@ mod tests {
     #[test]
     fn tof_1_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
-        tdc1000.set_time_of_flight(TimeOfFlightValue::new(
-            TimeOfFlightValue::HIGH,
-        ));
+        let tdc1000 = Tdc1000Builder::new()
+            .set_time_of_flight(TimeOfFlightValue::new(TimeOfFlightValue::HIGH))
+            .build(spi);
         let tof1val = tdc1000.get_tof_1_value();
         assert_eq!(tof1val, 3);
     }
@@ -1361,10 +1365,9 @@ mod tests {
     #[test]
     fn tof_2_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
-        tdc1000.set_time_of_flight(TimeOfFlightValue::new(
-            TimeOfFlightValue::HIGH,
-        ));
+        let tdc1000 = Tdc1000Builder::new()
+            .set_time_of_flight(TimeOfFlightValue::new(TimeOfFlightValue::HIGH))
+            .build(spi);
         let tof2val = tdc1000.get_tof_0_value();
         assert_eq!(tof2val, 255);
     }
@@ -1372,8 +1375,9 @@ mod tests {
     #[test]
     fn timeout_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let mut tdc1000 = Tdc1000::new(spi);
-        tdc1000.set_short_tof_blank_period(ShortTofBlankPeriod::T0Times32);
+        let tdc1000 = Tdc1000Builder::new()
+            .set_short_tof_blank_period(ShortTofBlankPeriod::T0Times32)
+            .build(spi);
         let timeout_value = tdc1000.get_timeout_value();
         assert_eq!(timeout_value, 17);
     }
@@ -1381,7 +1385,7 @@ mod tests {
     #[test]
     fn clock_rate_value_for_spi_is_calculated_correctly() {
         let spi = MockSpiDevice;
-        let tdc1000 = Tdc1000::new(spi);
+        let tdc1000 = Tdc1000Builder::new().build(spi);
         let clock_rate_value = tdc1000.get_clock_rate_value();
         assert_eq!(clock_rate_value, 0);
     }

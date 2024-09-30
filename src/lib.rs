@@ -40,21 +40,17 @@ enum ConfigAddresses {
 
 const FREQUENCY_DIVIDER_BIT_OFFSET: u8 = 5;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TxFrequencyDivider {
     DivideBy2,
     DivideBy4,
+    #[default]
     DivideBy8,
     DivideBy16,
     DivideBy32,
     DivideBy64,
     DivideBy128,
     DivideBy256,
-}
-impl Default for TxFrequencyDivider {
-    fn default() -> Self {
-        TxFrequencyDivider::DivideBy8
-    }
 }
 
 #[derive(Copy, Clone)]
@@ -78,8 +74,9 @@ impl Default for TxPulses {
 
 const MEASUREMENT_CYCLES_BIT_OFFSET: u8 = 3;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum MeasurementCycles {
+    #[default]
     MeasurementCycles1,
     MeasurementCycles2,
     MeasurementCycles4,
@@ -89,15 +86,11 @@ pub enum MeasurementCycles {
     MeasurementCycles64,
     MeasurementCycles128,
 }
-impl Default for MeasurementCycles {
-    fn default() -> Self {
-        MeasurementCycles::MeasurementCycles1
-    }
-}
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ReceiveEventsCnt {
+    #[default]
     DoNotCountStopEvents,
     StopEvents1,
     StopEvents2,
@@ -108,197 +101,135 @@ pub enum ReceiveEventsCnt {
     StopEvents7,
 }
 
-impl Default for ReceiveEventsCnt {
-    fn default() -> Self {
-        ReceiveEventsCnt::DoNotCountStopEvents
-    }
-}
-
 const VOLTAGE_REFERENCE_BIT_OFFSET: u8 = 7;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum VoltageReference {
+    #[default]
     Internal,
     External,
-}
-impl Default for VoltageReference {
-    fn default() -> Self {
-        VoltageReference::Internal
-    }
 }
 
 const MEASUREMENT_MODE_BIT_OFFSET: u8 = 6;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum MeasurementMode {
+    #[default]
     TimeOfFlight,
     Temperature,
-}
-impl Default for MeasurementMode {
-    fn default() -> Self {
-        MeasurementMode::TimeOfFlight
-    }
 }
 
 const DAMPING_MODE_BIT_OFFSET: u8 = 5;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum DampingMode {
+    #[default]
     DisableDamping,
     EnableDamping,
-}
-impl Default for DampingMode {
-    fn default() -> Self {
-        DampingMode::DisableDamping
-    }
 }
 
 const CHANNEL_SWAP_BIT_OFFSET: u8 = 4;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ChannelSwap {
+    #[default]
     DisableSwap,
     EnableSwap,
-}
-impl Default for ChannelSwap {
-    fn default() -> Self {
-        ChannelSwap::DisableSwap
-    }
 }
 
 const EXTERNAL_CHANNEL_SELECT_BIT_OFFSET: u8 = 3;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ExternalChannelSelect {
+    #[default]
     DisableExternalChannelSelect,
     EnableExternalChannelSelect,
-}
-impl Default for ExternalChannelSelect {
-    fn default() -> Self {
-        ExternalChannelSelect::DisableExternalChannelSelect
-    }
 }
 
 const CHANNEL_SELECT_BIT_OFFSET: u8 = 2;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ChannelSelect {
+    #[default]
     Channel1,
     Channel2,
 }
-impl Default for ChannelSelect {
-    fn default() -> Self {
-        ChannelSelect::Channel1
-    }
-}
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TOFMeasurementMode {
+    #[default]
     Mode0,
     Mode1,
     Mode2,
 }
-impl Default for TOFMeasurementMode {
-    fn default() -> Self {
-        TOFMeasurementMode::Mode0
-    }
-}
 
 const TEMP_MODE_BIT_OFFSET: u8 = 6;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TempMode {
+    #[default]
     MeasureRefRtd1Rtd2,
     MeasureRefRtd1,
-}
-impl Default for TempMode {
-    fn default() -> Self {
-        TempMode::MeasureRefRtd1Rtd2
-    }
 }
 
 const TEMP_RTD_SELECT_BIT_OFFSET: u8 = 5;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TempRtdSelect {
+    #[default]
     PT1000,
     PT500,
-}
-impl Default for TempRtdSelect {
-    fn default() -> Self {
-        TempRtdSelect::PT1000
-    }
 }
 
 const TEMP_CLK_DIV_BIT_OFFSET: u8 = 4;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TempClockDivider {
+    #[default]
     DivideBy8,
     UseTxFreqDivider,
-}
-impl Default for TempClockDivider {
-    fn default() -> Self {
-        TempClockDivider::DivideBy8
-    }
 }
 
 const BLANKING_BIT_OFFSET: u8 = 3;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum PowerBlanking {
+    #[default]
     DisablePowerBlanking,
     EnablePowerBlanking,
 }
-impl Default for PowerBlanking {
-    fn default() -> Self {
-        PowerBlanking::DisablePowerBlanking
-    }
-}
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum EchoQualificationThreshold {
     Mv35,
     Mv50,
     Mv75,
+    #[default]
     Mv125,
     Mv220,
     Mv410,
     Mv775,
     Mv1500,
 }
-impl Default for EchoQualificationThreshold {
-    fn default() -> Self {
-        EchoQualificationThreshold::Mv125
-    }
-}
 
 const RECEIVE_MODE_BIT_OFFSET: u8 = 6;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ReceiveMode {
+    #[default]
     SingleEcho,
     MultiEcho,
-}
-impl Default for ReceiveMode {
-    fn default() -> Self {
-        ReceiveMode::SingleEcho
-    }
 }
 
 const TRIGGER_EDGE_POLARITY_BIT_OFFSET: u8 = 5;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TriggerEdgePolarity {
+    #[default]
     RisingEdge,
     FallingEdge,
-}
-impl Default for TriggerEdgePolarity {
-    fn default() -> Self {
-        TriggerEdgePolarity::RisingEdge
-    }
 }
 
 pub struct TxPulseShiftPosition(u8);
@@ -324,8 +255,9 @@ impl Default for TxPulseShiftPosition {
 
 const PGA_GAIN_BIT_OFFSET: u8 = 5;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum PgaGain {
+    #[default]
     DB0,
     DB3,
     DB6,
@@ -335,37 +267,24 @@ pub enum PgaGain {
     DB18,
     DB21,
 }
-impl Default for PgaGain {
-    fn default() -> Self {
-        PgaGain::DB0
-    }
-}
 
 const PGA_CTRL_BIT_OFFSET: u8 = 4;
 const LNA_CTRL_BIT_OFFSET: u8 = 3;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum AmplifierControl {
+    #[default]
     Active,
     BypassedAndPoweredOff,
-}
-impl Default for AmplifierControl {
-    fn default() -> Self {
-        AmplifierControl::Active
-    }
 }
 
 const LNA_FB_BIT_OFFSET: u8 = 2;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum LnaFeedbackMode {
+    #[default]
     CapacitiveMode,
     ResistiveMode,
-}
-impl Default for LnaFeedbackMode {
-    fn default() -> Self {
-        LnaFeedbackMode::CapacitiveMode
-    }
 }
 
 pub struct TimeOfFlightValue(u16);
@@ -394,126 +313,90 @@ impl Default for TimeOfFlightValue {
 
 const ERR_SIG_WEAK_BIT_OFFSET: u8 = 2;
 #[repr(u8)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Default)]
 pub enum ErrSignalWeakRead {
+    #[default]
     NoError,
     SignalWeekTimeout,
-}
-impl Default for ErrSignalWeakRead {
-    fn default() -> Self {
-        ErrSignalWeakRead::NoError
-    }
 }
 
 const ERR_NO_SIG_BIT_OFFSET: u8 = 1;
 #[repr(u8)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Default)]
 pub enum ErrNoSignalRead {
+    #[default]
     NoError,
     NoSignalTimeout,
 }
-impl Default for ErrNoSignalRead {
-    fn default() -> Self {
-        ErrNoSignalRead::NoError
-    }
-}
 
 #[repr(u8)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Default)]
 pub enum ErrSignalHighRead {
+    #[default]
     NoError,
     SignalHigh,
-}
-impl Default for ErrSignalHighRead {
-    fn default() -> Self {
-        ErrSignalHighRead::NoError
-    }
 }
 
 const FORCE_SHORT_TOF_BIT_OFFSET: u8 = 6;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ForceShortTimeOfFlight {
+    #[default]
     Disabled,
     ForceShortTimeOfFlight,
-}
-impl Default for ForceShortTimeOfFlight {
-    fn default() -> Self {
-        ForceShortTimeOfFlight::Disabled
-    }
 }
 
 const SHORT_TOF_BLANK_PERIOD_BIT_OFFSET: u8 = 3;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ShortTofBlankPeriod {
     T0Times8,
     T0Times16,
     T0Times32,
+    #[default]
     T0Times64,
     T0Times128,
     T0Times256,
     T0Times512,
     T0Times1024,
-}
-impl Default for ShortTofBlankPeriod {
-    fn default() -> Self {
-        ShortTofBlankPeriod::T0Times64
-    }
 }
 
 const ECHO_TIMEOUT_BIT_OFFSET: u8 = 2;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum EchoTimeout {
+    #[default]
     EnableTimeout,
     DisableTimeout,
 }
-impl Default for EchoTimeout {
-    fn default() -> Self {
-        EchoTimeout::EnableTimeout
-    }
-}
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum TofTimeoutControl {
     T0Times128,
+    #[default]
     T0Times256,
     T0Times512,
     T0Times1024,
 }
-impl Default for TofTimeoutControl {
-    fn default() -> Self {
-        TofTimeoutControl::T0Times256
-    }
-}
 
 const CLOCK_IN_DIV_BIT_OFFSET: u8 = 2;
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum ClockInDiv {
+    #[default]
     DivideBy1,
     DivideBy2,
 }
-impl Default for ClockInDiv {
-    fn default() -> Self {
-        ClockInDiv::DivideBy1
-    }
-}
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub enum AutoZeroPeriod {
+    #[default]
     T0Times64,
     T0Times128,
     T0Times256,
     T0Times512,
-}
-impl Default for AutoZeroPeriod {
-    fn default() -> Self {
-        AutoZeroPeriod::T0Times64
-    }
 }
 
 #[derive(Default)]
@@ -584,16 +467,13 @@ impl ErrorFlagsRead {
 }
 
 #[repr(u8)]
+#[derive(Default)]
 pub enum ErrorFlagsWrite {
+    #[default]
     DoNothing,
     ResetAllErrorFlagsAndErrorPin,
     ResetStateMachineAndMeasurement,
     ResetErrorStatemachineAndMeasurement,
-}
-impl Default for ErrorFlagsWrite {
-    fn default() -> Self {
-        ErrorFlagsWrite::DoNothing
-    }
 }
 
 #[derive(Default)]
@@ -660,6 +540,12 @@ where
 }
 impl Tdc1000Builder<NoPin, NoPin, NoPin, NoPin> {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for Tdc1000Builder<NoPin, NoPin, NoPin, NoPin> {
+    fn default() -> Self {
         Self {
             config0: Default::default(),
             config1: Default::default(),

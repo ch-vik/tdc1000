@@ -869,17 +869,15 @@ where
     ERR: InputPin,
 {
     // Trigger impulse (blocking 100 cycles)
-    pub fn trigger(&mut self) -> Result<(), ErrorPin> {
-        self.trigger
-            .set_high()
-            .map_err(|_| ErrorPin::PinNotAssigned)?;
+    pub fn trigger(&mut self) -> Result<(), <TRG as ErrorType>::Error> {
+        self.trigger.set_high()?;
         // Wait a bit to allow the TDC1000 to ack the command
         for _ in 0..=100 {}
-        self.trigger.set_low().map_err(|_| ErrorPin::PinNotAssigned)
+        self.trigger.set_low()
     }
 
-    pub fn errb_status(&mut self) -> Result<bool, ErrorPin> {
-        self.error.is_low().map_err(|_| ErrorPin::PinNotAssigned)
+    pub fn errb_status(&mut self) -> Result<bool, <ERR as ErrorType>::Error> {
+        self.error.is_low()
     }
 
     pub fn set_active_channel(

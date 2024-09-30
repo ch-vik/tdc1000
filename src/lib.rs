@@ -895,6 +895,25 @@ where
             .map_err(Error::Spi)
     }
 
+    // Use external CH_SEL pin to select the active channel
+    // (external channel select must be enabled)
+    pub fn set_external_active_channel(
+        &mut self,
+        channel: ChannelSelect,
+    ) -> Result<(), <CHSEL as ErrorType>::Error> {
+        match channel {
+            ChannelSelect::Channel1 => self.channel_sel.set_low(),
+            ChannelSelect::Channel2 => self.channel_sel.set_high(),
+        }
+    }
+
+    // Blocking (1000 cycles) hardreset pin assert/de-assert
+    pub fn hardreset(&mut self) -> Result<(), <RST as ErrorType>::Error> {
+        self.reset.set_high()?;
+        for _ in 0..=1000 {}
+        self.reset.set_low()
+    }
+
     pub fn set_pga_gain(
         &mut self,
         gain: PgaGain,

@@ -255,7 +255,7 @@ impl Default for TxPulseShiftPosition {
 
 const PGA_GAIN_BIT_OFFSET: u8 = 5;
 #[repr(u8)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub enum PgaGain {
     #[default]
     DB0,

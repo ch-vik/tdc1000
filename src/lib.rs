@@ -925,6 +925,19 @@ where
             .map_err(Error::Spi)
     }
 
+    pub fn set_echo_qualification_threshold(
+        &mut self,
+        threshold: EchoQualificationThreshold,
+    ) -> Result<(), Error<SPI::Error>> {
+        self.config3.echo_qualification_threshold = threshold;
+        self.spi
+            .write(&[
+                ConfigAddresses::Config3 as u8 | SPI_WRITE_BIT,
+                self.get_config_3_value(),
+            ])
+            .map_err(Error::Spi)
+    }
+
     pub fn get_config_0_value(&self) -> u8 {
         let tx_frequency_divider = self.config0.tx_frequency_divider as u8;
         let tx_pulses = self.config0.tx_pulses.get_value();

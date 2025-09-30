@@ -201,7 +201,7 @@ pub enum PowerBlanking {
 }
 
 #[repr(u8)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub enum EchoQualificationThreshold {
     Mv35,
     Mv50,
